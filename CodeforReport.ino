@@ -130,12 +130,12 @@ void lineFollow() {
     if (centerDetected) {
         moveForward(BASE_SPEED, BASE_SPEED);
     } 
-    // If both left and center sensors detect the line, veer slightly right
+    // If both left and center sensors detect the line, veer slightly left
     else if (leftDetected && centerDetected) {
         moveForward(100, BASE_SPEED);
         lastDetected = -1;  // Track last known direction (left)
     } 
-    // If both right and center sensors detect the line, veer slightly left
+    // If both right and center sensors detect the line, veer slightly right
     else if (rightDetected && centerDetected) {
         moveForward(BASE_SPEED, 100);
         lastDetected = 1;  // Track last known direction (right)
@@ -325,7 +325,7 @@ void itemPickup() {
     digitalWrite(2, LOW); delay(500);
 
   } else {
-    bts.println("Failed to grip object.");
+    bts.println("Failed to grip object."); // Print to bluetooth module connected to phone application
     lineFollow(); // Retry navigation if pickup fails
   }
 }
@@ -368,7 +368,7 @@ void setup(void)
 {
   //SETUP SERIAL
   Serial.begin(9600);
-  bts.begin(9600);
+  bts.begin(9600); // Establish Bluetooth connection from bluetooth module to phone application
   //SETUP COLOUR SENSOR
   if (!(tcs.begin())) {
     bts.println("No TCS34725 found ... check your connections");
@@ -399,7 +399,7 @@ void setup(void)
   delay(1000);
 
   
-  //Serial.println("let's go");
+  bts.println("let's go");
   delay(1000);
 }
 
@@ -412,10 +412,10 @@ void loop() {
 
     int distance = distanceSensor.measureDistanceCm();
 
-    // STEP 2: If item is detected within detection distance, pick it up
+    // If item is detected within detection distance, pick it up
     if (distance <= DETECTION_DISTANCE && hasObject == 0) {
         if (colour == "Red") {
-            itemPickup();// delay(1000);
+            itemPickup();
             hasObject = 1;
             count = 2;
             bts.print("Count is: ");
@@ -425,7 +425,7 @@ void loop() {
             bts.println(red);
             Serial.println(1);
         } else if (colour == "Green") {
-            itemPickup();//delay(1000);
+            itemPickup();
             hasObject = 1;
             count = 7;
             bts.print("Count is: ");
@@ -435,7 +435,7 @@ void loop() {
             bts.println(green);
             Serial.println(1);
         } else if (colour == "Purple") {
-            itemPickup(); //delay(1000);
+            itemPickup(); 
             hasObject = 1;
             purple = true;
             bts.println("Purple is ");
@@ -444,7 +444,7 @@ void loop() {
         } else { 
             // If no color is detected but an obstacle is present
             set_motor_currents(0, 0);
-            Serial.println("Obstacle detected. Sounding buzzer.");
+            bts.println("Obstacle detected. Sounding buzzer.");
             digitalWrite(2, HIGH);
             delay(400);
             digitalWrite(2, LOW);
@@ -473,7 +473,6 @@ void loop() {
       count = 3;
       bts.print("COUNT IS: ");
       bts.println(count);
-      //delay(1000);
     }
 
     if (colour == "Red" && distance <= DETECTION_DISTANCE && count == 3 && hasObject == 1) {
@@ -482,7 +481,6 @@ void loop() {
       Serial.println(2);
       count = 4;
       hasObject = 0;
-      //red = true;
     }
 
     if (colour == "Yellow" && red && !green && !purple && count == 4) {
@@ -497,8 +495,7 @@ void loop() {
 
     if (colour == "Green" && red && !green && accident1 == true && count == 5) {
       set_motor_currents(0, 0);
-      //delay(1000);
-      //Serial.println("Turning right from red to purple");
+      bts.println("Turning right from red to purple");
       turnRight();delay(200);
       accident1 = false;
       lineFollow();
@@ -506,22 +503,19 @@ void loop() {
 
     if (colour == "Purple" && red && !green && accident2 == true) {
       set_motor_currents(0, 0);
-      //delay(1000);
-      //Serial.println("Turning right from red to purple");
+      bts.println("Turning right from red to purple");
       turnLeft();delay(400);
       accident2 = false;
       lineFollow();
     }
 
-    // STEP 3: Detect if back at the start (after a pickup cycle)
+    // Detect if back at the start (after a pickup cycle)
     if (colour == "Red" && (red && !green && count == 5)) { 
         // Red was done, back at start, need to turn left to green
         set_motor_currents(0, 0);
-        //delay(1000);
         Serial.println("Turning left from red to green");
         turnLeft();
         delay(500);
-        //lastDetected = -1;
         accident1 = false;
         accident2 = false;
         count = 6;
@@ -531,7 +525,6 @@ void loop() {
     } 
 
     if (colour != "Green" && green && count == 7) {
-      //count = count + 1;
       bts.print("COUNT IS: ");
       bts.println(count);
       delay(1000);
@@ -542,10 +535,8 @@ void loop() {
       dropOff();
       Serial.println(2);
       bts.println("Red Dropped off successfully! ");
-      //count = count + 1;
       hasObject = 0;
       count = 9;
-      //green = true;
     }
 
     if (colour == "Yellow" && red && green && !purple && count == 9) {
@@ -560,7 +551,6 @@ void loop() {
     }
 
     if (colour == "Green" && green && red && !purple && accident3 == true) {
-      //delay(200);
       set_motor_currents(0, 0);
       turnRight();
       delay(800);
@@ -572,7 +562,6 @@ void loop() {
         // Purple was done, back at start, need to turn right
         delay(200);
         set_motor_currents(0, 0);
-        //delay(1000);
         Serial.println("Turning right from red to purple");
         turnRight();
         delay(400);
